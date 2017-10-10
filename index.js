@@ -250,7 +250,7 @@ class AI extends Player {
 
     //play a random corner
     let corners = legalMoves.filter(move => move.every((m, idx) => {
-      return m === [0,0][idx] || m === [2,2][idx] || m === [0, ttt.cols - 1][idx] ||m === [0, ttt.cols - 1][idx];
+      return m === [0,0][idx] || m === [2,2][idx] || m === [0, ttt.cols - 1][idx] || m === [0, ttt.cols - 1][idx];
     }));
 
 
