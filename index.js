@@ -3,15 +3,16 @@ let readline = require('readline-sync');
 
 
 class TicTacToe {
-  constructor(players, size = 5) {
-    this.size = size;
-    this.movesRemaining  = this.size * this.size;
+  constructor(players, size) {
+    this.rows = size && size.rows ? size.rows : 3;
+    this.cols = size && size.cols ? size.cols : 3;
+    this.movesRemaining  = this.rows * this.cols;
     this.board = [];
     this.EMPTY = '-';
-    for (let i = 0; i < this.size; i++) {
-      this.board[i] = [];
-      for (let j = 0; j < this.size; j++) {
-        this.board[i].push(this.EMPTY);
+    for (let row = 0; row < this.rows; row++) {
+      this.board[row] = [];
+      for (let col = 0; col < this.cols; col++) {
+        this.board[row].push(this.EMPTY);
       }
     }
 
@@ -52,14 +53,14 @@ class TicTacToe {
 
     let cols = [];
     var char = 'a';
-    for (var i = 0; i < this.size; i++) {
+    for (var i = 0; i < this.cols; i++) {
       cols.push(char);
       char = String.fromCharCode(char.charCodeAt(0) + 1);
     }
 
     process.stdout.write(' ' + cols.join(' ') + "\n");
 
-    for (let i = 0; i < this.size; i++) {
+    for (let i = 0; i < this.rows; i++) {
       process.stdout.write(String(i + 1) + ' ' + this.board[i].join('|') + "\n");
     }
     return this;
@@ -71,7 +72,6 @@ class TicTacToe {
     }
 
     if (typeof row === 'undefined' || typeof col === 'undefined') {
-      console.log(row, col);
       throw new Error('row and col required');
     }
 
@@ -92,7 +92,7 @@ class TicTacToe {
     let lines = [];
 
     //get all the rows
-    for(let rowNumber = 0; rowNumber < this.size; rowNumber++) {
+    for(let rowNumber = 0; rowNumber < this.rows; rowNumber++) {
       lines.push(board[rowNumber]);
     }
 
@@ -101,19 +101,19 @@ class TicTacToe {
     };
 
     //get all the columns
-    for(let c = 0; c < this.size; c++) {
+    for(let c = 0; c < this.cols; c++) {
       lines.push(getColumn(board, c));
     }
 
     //get left right diagonal
     let lr = [];
-    for (let i = 0, j = 0; i < this.size, j < this.size; i++, j++) {
+    for (let i = 0, j = 0; i < this.rows, j < this.cols; i++, j++) {
       lr.push(board[i][j]);
     }
     lines.push(lr);
 
     let rl = [];
-    for (let i = 0, j = this.size - 1; i < this.size, j >= 0; i++, j--) {
+    for (let i = 0, j = this.cols - 1; i < this.rows, j >= 0; i++, j--) {
       rl.push(board[i][j]);
     }
     lines.push(rl);
@@ -128,17 +128,18 @@ class TicTacToe {
   }
 
   isFree(row, col) {
-    if (row < 0 || row >= this.size || col < 0 || col > this.size) {
+    if (row < 0 || row >= this.rows || col < 0 || col > this.cols) {
       return false;
     }
+
     return this.board[row][col] === this.EMPTY;
   }
 
   getLegalMoves() {
     //play legal move
     let legalMoves = [];
-    for (let row = 0; row < this.size; row++) {
-      for (let col = 0; col < this.size; col++) {
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
         if (this.isFree(row, col)) {
           legalMoves.push([row, col]);
         }
@@ -216,8 +217,8 @@ class AI extends Player {
     };
 
     //play winning move
-    for (let row = 0; row < ttt.size; row++) {
-      for (let col = 0; col < ttt.size; col++) {
+    for (let row = 0; row < ttt.rows; row++) {
+      for (let col = 0; col < ttt.cols; col++) {
         if (ttt.isFree(row, col) && isWinning(this.token, row, col)) {
           return ttt.addToken(row, col);
         }
@@ -225,8 +226,8 @@ class AI extends Player {
     }
 
     //play blocking move
-    for (let row = 0; row < ttt.size; row++) {
-      for (let col = 0; col < ttt.size; col++) {
+    for (let row = 0; row < ttt.rows; row++) {
+      for (let col = 0; col < ttt.cols; col++) {
         if (ttt.isFree(row, col) && isWinning(ttt.nextPlayer().token, row, col)) {
           return ttt.addToken(row, col);
         }
@@ -234,8 +235,8 @@ class AI extends Player {
     }
 
     //prefer the center
-    if (ttt.isFree(Math.floor(ttt.size / 2), Math.floor(ttt.size / 2))) {
-      return ttt.addToken(this.token, Math.floor(ttt.size / 2), Math.floor(ttt.size / 2));
+    if (ttt.isFree(Math.floor(ttt.rows / 2), Math.floor(ttt.cols / 2))) {
+      return ttt.addToken(this.token, Math.floor(ttt.rows / 2), Math.floor(ttt.cols / 2));
     }
 
     //play a random legal move
@@ -248,4 +249,4 @@ class AI extends Player {
 
 let tokens = Math.random() < 0.5 ? ['X', 'O'] : ['O', 'X'];
 
-new TicTacToe([new AI(tokens[0]), new AI(tokens[1])]).play();
+new TicTacToe([new AI(tokens[0]), new AI(tokens[1])], {rows: 4, cols: 4}).play();
