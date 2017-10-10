@@ -126,7 +126,7 @@ class TicTacToe {
     lines.push(rl);
 
     let test = (element, index, array) => {
-      return element == token;
+      return element === token;
     };
 
     return lines.some((line, index, array) => {
@@ -257,7 +257,7 @@ class AI extends Player {
 
 process.stdout.write("TicTacToe\n\n");
 
-if('n' == readline.question("Shall we play a game (Y/N)? ").toLowerCase().trim()) {
+if('n' === readline.question("Shall we play a game (Y/N)? ").toLowerCase().trim()) {
   process.exit();
 }
 
