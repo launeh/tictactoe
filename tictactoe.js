@@ -155,6 +155,10 @@ class TicTacToe {
   }
 
   play() {
+    if (!this.players) {
+      this.addPlayers([]);
+    }
+
     this.show();
     do {
       this.player().move();
