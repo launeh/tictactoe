@@ -6,6 +6,15 @@ class TicTacToe {
     this.EMPTY = '-';
     this.rows = parseInt(size.rows);
     this.cols = parseInt(size.cols);
+
+    if (this.rows < 3) {
+      throw new Error('At least 3 rows required');
+    }
+
+    if (this.cols < 3) {
+      throw new Error('At least 3 cols required');
+    }
+
     this.movesRemaining  = this.rows * this.cols;
     this.board = [];
     this.history = [];
@@ -152,10 +161,11 @@ class TicTacToe {
 
   play() {
     this.show();
-    while (!this.isOver()) {
+    do {
       this.player().move();
       this.show();
-    }
+    } while(!this.isOver());
+
     process.stdout.write("\n" + this.status() + "\n\n");
   }
 }
