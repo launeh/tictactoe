@@ -30,9 +30,7 @@ class TicTacToe {
 
   addPlayers(players = []) {
     this.players = (!players || players.length < 1) ? [new AI('X', 'WOPR'), new AI('O', 'WOPR')] : players;
-    this.players.forEach((player) => {
-      player.ttt = this;
-    });
+    this.players.forEach((player) => player.ttt = this);
     return this;
   }
 
@@ -99,49 +97,45 @@ class TicTacToe {
     return false;
   }
 
-  hasWon(token) {
-    if (!token) {
-      throw new Error('[hasWon] Token required');
-    }
-
-    let board = this.board;
+  getLines() {
     let lines = [];
 
     //get all the rows
     for(let rowNumber = 0; rowNumber < this.rows; rowNumber++) {
-      lines.push(board[rowNumber]);
+      lines.push(this.board[rowNumber]);
     }
 
-    let getColumn = (array, number) => {
-      return array.map(row => row[number]);
-    };
+    let getColumn = (board, colNum) => board.map(row => row[colNum]);
 
     //get all the columns
     for(let c = 0; c < this.cols; c++) {
-      lines.push(getColumn(board, c));
+      lines.push(getColumn(this.board, c));
     }
 
     //get left right diagonal
     let lr = [];
     for(let i = 0, j = 0; i < this.rows, j < this.cols; i++, j++) {
-      lr.push(board[i][j]);
+      lr.push(this.board[i][j]);
     }
     lines.push(lr);
 
     //get right left diagonal
     let rl = [];
     for(let i = 0, j = this.cols - 1; i < this.rows, j >= 0; i++, j--) {
-      rl.push(board[i][j]);
+      rl.push(this.board[i][j]);
     }
     lines.push(rl);
+    return lines;
+  }
 
-    let test = (element, index, array) => {
-      return element === token;
-    };
+  hasWon(token) {
+    if (!token) {
+      throw new Error('[hasWon] Token required');
+    }
 
-    return lines.some((line, index, array) => {
-      return line.every(test);
-    });
+    let test = (cell, idx, array) => cell === token;
+
+    return this.getLines().some((line, idx, array) => line.every(test));
   }
 
   isFree(row, col) {
