@@ -90,6 +90,10 @@ class TicTacToe {
   }
 
   hasWon(token) {
+    if (!token) {
+      throw new Error('[hasWon] Token required');
+    }
+
     let board = this.board;
     let lines = [];
 
@@ -160,7 +164,7 @@ class Player {
   constructor(token, name = 'Player') {
     this.token = token;
     this.name  = name;
-    this.prompt = this.name + '(' + this.token + '): ';
+    this.prompt = this.name + ' (' + this.token + '): ';
   }
   move() {
     throw new Error('Unimplemented');
@@ -228,17 +232,17 @@ class AI extends Player {
       }
     }
 
-    //play the center
+    //play the center.
+    //TODO: get multiple centers in case of EVENxEVEN board
     if (ttt.isFree(Math.floor(ttt.rows / 2), Math.floor(ttt.cols / 2))) {
       return ttt.addToken(this.token, Math.floor(ttt.rows / 2), Math.floor(ttt.cols / 2));
     }
 
     //play a random corner
-    let corners = legalMoves.filter(function(move) {
-      return move.every((m, idx) => {
-        return m === [0,0][idx] || m === [2,2][idx] || m === [0, ttt.cols - 1][idx] ||m === [0, ttt.cols - 1][idx];
-      });
-    });
+    let corners = legalMoves.filter(move => move.every((m, idx) => {
+      return m === [0,0][idx] || m === [2,2][idx] || m === [0, ttt.cols - 1][idx] ||m === [0, ttt.cols - 1][idx];
+    }));
+
 
     if (corners.length > 0) {
       let[row, col] = corners[Math.floor(Math.random() * corners.length)];
@@ -253,11 +257,8 @@ class AI extends Player {
 
 process.stdout.write("TicTacToe\n\n");
 
-let answer = 'y';
-while(answer == readline.question("Shall we play a game (Y/N)? ").toLowerCase().trim()) {
-  if ('n' === answer) {
-    process.exit();
-  }
+if('n' == readline.question("Shall we play a game (Y/N)? ").toLowerCase().trim()) {
+  process.exit();
 }
 
 let numPlayers = parseInt(readline.question("How many players? "));
@@ -271,8 +272,9 @@ switch(numPlayers) {
     new TicTacToe().addPlayers([new Human('X', 'David'), new AI('O', 'WOPR')]).play();
     break;
   case 2:
-    new TicTacToe().addPlayers([new Human('X', 'David'), new Human('Jennifer')]).play();
+  new TicTacToe().addPlayers([new Human('X', 'David'), new Human('O', 'Jennifer')]).play();
     break;
   default:
-
+  process.stdout.write("\nMax 2 players\n");
+  break;
 }
