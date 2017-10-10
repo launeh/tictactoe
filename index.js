@@ -25,7 +25,7 @@ class TicTacToe {
   status() {
     for (let i = 0; i < this.players.length; i++) {
       if (this.hasWon(this.players[i].token)) {
-        return `${this.players[i].token} won!`;
+        return `${this.players[i].name}(${this.players[i].token}) won!`;
       }
     }
 
@@ -248,5 +248,16 @@ class AI extends Player {
 }
 
 let tokens = Math.random() < 0.5 ? ['X', 'O'] : ['O', 'X'];
+let names  = Math.random() < 0.5 ? ['WOPR', 'HAL'] : ['HAL', 'WOPR'];
 
-new TicTacToe([new AI(tokens[0]), new AI(tokens[1])], {rows: 4, cols: 4}).play();
+//AI vs AI
+new TicTacToe([new AI(tokens[0], names[0]), new AI(tokens[1], names[1])], {rows: 3, cols: 3}).play();
+
+//Human vs AI
+//new TicTacToe([new Human(tokens[0]), new AI(tokens[1], names[1])], {rows: 3, cols: 3}).play();
+
+//AI vs Human
+//new TicTacToe([new AI(tokens[0]), new Human(tokens[1])], {rows: 3, cols: 3}).play();
+
+//AI vs Human
+//new TicTacToe([new Human(tokens[0]), new Human(tokens[1])], {rows: 3, cols: 3}).play();
