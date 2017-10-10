@@ -145,12 +145,10 @@ class TicTacToe {
     if (row < 0 || row >= this.rows || col < 0 || col > this.cols) {
       return false;
     }
-
     return this.board[row][col] === this.EMPTY;
   }
 
   getLegalMoves() {
-    //play legal move
     let legalMoves = [];
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
