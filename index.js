@@ -1,29 +1,49 @@
 var clear = require('clear');
+let readline = require('readline-sync');
 
-var rl = require('readline').createInterface({
-  input  : process.stdin,
-  output : process.stdout
-});
 
 class TicTacToe {
-  constructor(p1 = 'X', p2 = 'O', empty = '-', size = 3) {
-    this.size   = size;
+  constructor(players, size = 5) {
+    this.size = size;
     this.movesRemaining  = this.size * this.size;
-    this.tokens = {
-      p1 : p1,
-      p2 : p2,
-      empty : empty
-    };
-
-    this.player = Math.random() < 0.5 ? p1 : p2;
-
     this.board = [];
+    this.EMPTY = '-';
     for (let i = 0; i < this.size; i++) {
       this.board[i] = [];
       for (let j = 0; j < this.size; j++) {
-        this.board[i].push(empty);
+        this.board[i].push(this.EMPTY);
       }
     }
+
+    players.forEach((player) => {
+      player.ttt = this;
+    });
+    this.players = players;
+  }
+
+  status() {
+    for (let i = 0; i < this.players.length; i++) {
+      if (this.hasWon(this.players[i].token)) {
+        return `${this.players[i].token} won!`;
+      }
+    }
+
+    if (this.movesRemaining < 1) {
+      return 'Strange game.\nThe only winning move is not to play.\nHow about a nice game of chess?';
+    }
+
+    return 'Playing...';
+  }
+
+  isOver() {
+    if (this.movesRemaining < 1) {
+      return true;
+    }
+    return false;
+  }
+
+  nextPlayer() {
+    return this.players[(this.movesRemaining + 1) % this.players.length];
   }
 
   show() {
@@ -36,6 +56,7 @@ class TicTacToe {
       cols.push(char);
       char = String.fromCharCode(char.charCodeAt(0) + 1);
     }
+
     process.stdout.write(' ' + cols.join(' ') + "\n");
 
     for (let i = 0; i < this.size; i++) {
@@ -44,21 +65,29 @@ class TicTacToe {
     return this;
   }
 
-  addToken(row, col) {
-    if (this.board[row] && this.isFree(row, col)) {
-      this.board[row][col] = this.player ;
-      this.movesRemaining--;
-      return true;
+  addToken(token, row, col) {
+    if (!token) {
+      throw new Error('Token required');
     }
 
+    if (typeof row === 'undefined' || typeof col === 'undefined') {
+      console.log(row, col);
+      throw new Error('row and col required');
+    }
+
+    if (this.board[row] && this.board[row][col] && this.isFree(row, col)) {
+      this.board[row][col] = token;
+      if (this.hasWon(token)) {
+        this.movesRemaining = 0;
+      } else {
+        this.movesRemaining--;
+      }
+      return true;
+    }
     return false;
   }
 
-  switchPlayers() {
-    this.player = this.player === this.tokens.p1 ? this.tokens.p2 : this.tokens.p1;
-  }
-
-  hasWon(token, row, col) {
+  hasWon(token) {
     let board = this.board;
     let lines = [];
 
@@ -78,17 +107,16 @@ class TicTacToe {
 
     //get left right diagonal
     let lr = [];
-    for (let i = 0, j = 0; row === col, i < this.size, j < this.size; i++, j++) {
+    for (let i = 0, j = 0; i < this.size, j < this.size; i++, j++) {
       lr.push(board[i][j]);
     }
     lines.push(lr);
 
     let rl = [];
-    for (let i = 0, j = 0; row + col === this.size -1, i < this.size, j < this.size; i++, j++) {
+    for (let i = 0, j = this.size - 1; i < this.size, j >= 0; i++, j--) {
       rl.push(board[i][j]);
     }
     lines.push(rl);
-
 
     let test = (element, index, array) => {
       return element == token;
@@ -99,12 +127,60 @@ class TicTacToe {
     });
   }
 
-  human(line) {
+  isFree(row, col) {
+    if (row < 0 || row >= this.size || col < 0 || col > this.size) {
+      return false;
+    }
+    return this.board[row][col] === this.EMPTY;
+  }
+
+  getLegalMoves() {
+    //play legal move
+    let legalMoves = [];
+    for (let row = 0; row < this.size; row++) {
+      for (let col = 0; col < this.size; col++) {
+        if (this.isFree(row, col)) {
+          legalMoves.push([row, col]);
+        }
+      }
+    }
+    return legalMoves;
+  }
+
+  play() {
+    this.show();
+    while (!this.isOver()) {
+      this.nextPlayer().move();
+      this.show();
+    }
+
+    process.stdout.write("\n" + this.status() + "\n\n");
+  }
+}
+
+class Player {
+  constructor(token, name = 'Player') {
+    this.token = token;
+    this.name  = name;
+    this.prompt = this.name + '(' + this.token + '): ';
+  }
+  move() {
+    throw new Error('Unimplemented');
+  }
+}
+
+class Human extends Player {
+
+  constructor(token, name = 'Human') {
+    super(token, name);
+  }
+
+  move() {
+    let move = readline.question(this.prompt);
     /*
      * Allow spaces: (1a, 1 a, 1  a) are all valid
      */
-    var [a, b] = line.toLowerCase().split('').filter(token => token.trim() !== '');
-
+    var [a, b] = move.toLowerCase().split('').filter(token => token.trim() !== '');
     /*
      * Allow 1a or a1
      */
@@ -116,91 +192,60 @@ class TicTacToe {
 
     let row = a - 1;
     let col = b.charCodeAt(0) - 'a'.charCodeAt(0);
-    return this.addToken(row, col);
+    this.ttt.addToken(this.token, row, col);
+  }
+}
+
+class AI extends Player {
+  constructor(token, name = 'WOPR') {
+    super(token, name);
   }
 
-  isFree(row, col) {
-    return this.board[row][col] === this.tokens.empty;
-  }
+  move() {
+    let ttt = this.ttt;
 
-  ai() {
     let isWinning = (token, row, col) => {
       let winning = false;
-      this.board[row][col] = token;
-      if (this.hasWon(token, row, col)) {
+      ttt.board[row][col] = token;
+      if (ttt.hasWon(token, row, col)) {
         winning = true;
       }
 
-      this.board[row][col] = this.tokens.empty;
+      ttt.board[row][col] = ttt.EMPTY;
       return false;
     };
 
     //play winning move
-    for (let row = 0; row < this.size; row++) {
-      for (let col = 0; col < this.size; col++) {
-        if (this.isFree(row, col) && isWinning(this.player, row, col)) {
-          return this.addToken(row, col);
+    for (let row = 0; row < ttt.size; row++) {
+      for (let col = 0; col < ttt.size; col++) {
+        if (ttt.isFree(row, col) && isWinning(this.token, row, col)) {
+          return ttt.addToken(row, col);
         }
       }
     }
 
     //play blocking move
-    let otherPlayer = this.player === this.tokens.p1 ? this.tokens.p2 : this.tokens.p1;
-    for (let row = 0; row < this.size; row++) {
-      for (let col = 0; col < this.size; col++) {
-        if (this.isFree(row, col) && isWinning(otherPlayer, row, col)) {
-          return this.addToken(row, col);
+    for (let row = 0; row < ttt.size; row++) {
+      for (let col = 0; col < ttt.size; col++) {
+        if (ttt.isFree(row, col) && isWinning(ttt.nextPlayer().token, row, col)) {
+          return ttt.addToken(row, col);
         }
       }
     }
 
-    //play legal move
-    let legalMoves = [];
-    for (let row = 0; row < this.size; row++) {
-      for (let col = 0; col < this.size; col++) {
-        if (this.isFree(row, col)) {
-          legalMoves.push([row, col]);
-        }
-      }
+    //prefer the center
+    if (ttt.isFree(Math.floor(ttt.size / 2), Math.floor(ttt.size / 2))) {
+      return ttt.addToken(this.token, Math.floor(ttt.size / 2), Math.floor(ttt.size / 2));
     }
 
+    //play a random legal move
+    let legalMoves = ttt.getLegalMoves();
     let[row, col] = legalMoves[Math.floor(Math.random() * legalMoves.length)];
-    return this.addToken(row, col);
-  }
 
-  play() {
-    var self = this;
-    self.show();
-    rl.setPrompt(`\n${self.player} : `);
-    rl.prompt();
-    return rl.on('line', function(line){
-      if(!self.human(line)) {
-        process.stdout.write("\nInvalid move. Try again\n");
-        return rl.prompt();
-      }
-
-      if (self.hasWon(self.player)) {
-        process.stdout.write(`\nYou won!\n`);
-        return rl.close();
-      }
-
-      if (self.movesRemaining < 1) {
-        process.stdout.write("Draw game: draw\n");
-        return rl.close();
-      }
-      self.switchPlayers();
-      self.ai();
-      self.show();
-
-      if (self.hasWon(self.player)) {
-        process.stdout.write(`\nYou lose!\n`);
-        return rl.close();
-      }
-
-      self.switchPlayers();
-      return rl.prompt();
-    });
+    return ttt.addToken(this.token, row, col);
   }
 }
 
-new TicTacToe().play();
+let tokens = Math.random() < 0.5 ? ['X', 'O'] : ['O', 'X'];
+
+new TicTacToe([new AI(tokens[0]), new AI(tokens[1])]).play();
