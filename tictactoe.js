@@ -133,9 +133,9 @@ class TicTacToe {
       throw new Error('[hasWon] Token required');
     }
 
-    let test = (cell, idx, array) => cell === token;
+    let isToken = (cell, idx, array) => cell === token;
 
-    return this.getLines().some((line, idx, array) => line.every(test));
+    return this.getLines().some((line, idx, array) => line.every(isToken));
   }
 
   isFree(row, col) {
