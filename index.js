@@ -118,7 +118,7 @@ class TicTacToe {
     }
     lines.push(lr);
 
-    //get left right diagonal
+    //get right left diagonal
     let rl = [];
     for(let i = 0, j = this.cols - 1; i < this.rows, j >= 0; i++, j--) {
       rl.push(board[i][j]);
