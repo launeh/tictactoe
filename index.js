@@ -1,14 +1,13 @@
 var clear = require('clear');
 let readline = require('readline-sync');
 
-
 class TicTacToe {
-  constructor(players, size) {
-    this.rows = size && size.rows ? size.rows : 3;
-    this.cols = size && size.cols ? size.cols : 3;
+  constructor(size = {rows : 3, cols : 3}) {
+    this.EMPTY = '-';
+    this.rows = parseInt(size.rows);
+    this.cols = parseInt(size.cols);
     this.movesRemaining  = this.rows * this.cols;
     this.board = [];
-    this.EMPTY = '-';
     this.history = [];
 
     for (let row = 0; row < this.rows; row++) {
@@ -17,11 +16,14 @@ class TicTacToe {
         this.board[row].push(this.EMPTY);
       }
     }
+  }
 
-    players.forEach((player) => {
+  addPlayers(players = []) {
+    this.players = (!players || players.length < 1) ? [new AI('X', 'WOPR'), new AI('O', 'WOPR')] : players;
+    this.players.forEach((player) => {
       player.ttt = this;
     });
-    this.players = players;
+    return this;
   }
 
   status() {
@@ -39,10 +41,7 @@ class TicTacToe {
   }
 
   isOver() {
-    if (this.movesRemaining < 1) {
-      return true;
-    }
-    return false;
+    return this.movesRemaining < 1;
   }
 
   player() {
@@ -55,12 +54,6 @@ class TicTacToe {
 
   show() {
     clear();
-    process.stdout.write("TicTacToe\n\n");
-
-    if (this.movesRemaining >= (this.rows * this.cols)) {
-      process.stdout.write("Would you like to play a game? ");
-    }
-
     process.stdout.write("Use [row][col]. E.g. 1a \n\n ");
 
     let cols = [];
@@ -89,12 +82,7 @@ class TicTacToe {
 
     if (this.board[row] && this.board[row][col] && this.isFree(row, col)) {
       this.board[row][col] = token;
-      if (this.hasWon(token)) {
-        this.movesRemaining = 0;
-      } else {
-        this.movesRemaining--;
-      }
-
+      this.movesRemaining = this.hasWon(token) ? 0 : this.movesRemaining - 1;
       this.history.push({token : token, row : row, col : col});
       return true;
     }
@@ -121,13 +109,14 @@ class TicTacToe {
 
     //get left right diagonal
     let lr = [];
-    for (let i = 0, j = 0; i < this.rows, j < this.cols; i++, j++) {
+    for(let i = 0, j = 0; i < this.rows, j < this.cols; i++, j++) {
       lr.push(board[i][j]);
     }
     lines.push(lr);
 
+    //get left right diagonal
     let rl = [];
-    for (let i = 0, j = this.cols - 1; i < this.rows, j >= 0; i++, j--) {
+    for(let i = 0, j = this.cols - 1; i < this.rows, j >= 0; i++, j--) {
       rl.push(board[i][j]);
     }
     lines.push(rl);
@@ -142,10 +131,7 @@ class TicTacToe {
   }
 
   isFree(row, col) {
-    if (row < 0 || row >= this.rows || col < 0 || col > this.cols) {
-      return false;
-    }
-    return this.board[row][col] === this.EMPTY;
+    return row >= 0 && row < this.rows && col >= 0 && col < this.cols && (this.board[row][col] === this.EMPTY);
   }
 
   getLegalMoves() {
@@ -166,7 +152,6 @@ class TicTacToe {
       this.player().move();
       this.show();
     }
-
     process.stdout.write("\n" + this.status() + "\n\n");
   }
 }
@@ -266,17 +251,28 @@ class AI extends Player {
   }
 }
 
-let tokens = Math.random() < 0.5 ? ['X', 'O'] : ['O', 'X'];
-let names  = Math.random() < 0.5 ? ['WOPR', 'HAL'] : ['HAL', 'WOPR'];
+process.stdout.write("TicTacToe\n\n");
 
-//AI vs AI
-new TicTacToe([new AI(tokens[0], names[0]), new AI(tokens[1], names[1])], {rows: 3, cols: 3}).play();
+let answer = 'y';
+while(answer == readline.question("Shall we play a game (Y/N)? ").toLowerCase().trim()) {
+  if ('n' === answer) {
+    process.exit();
+  }
+}
 
-//Human vs AI
-//new TicTacToe([new Human(tokens[0]), new AI(tokens[1], names[1])], {rows: 3, cols: 3}).play();
+let numPlayers = parseInt(readline.question("How many players? "));
+numPlayers = isNaN(numPlayers) ? 0 : numPlayers;
 
-//AI vs Human
-//new TicTacToe([new AI(tokens[0]), new Human(tokens[1])], {rows: 3, cols: 3}).play();
+switch(numPlayers) {
+  case 0:
+    new TicTacToe().addPlayers().play();
+    break;
+  case 1:
+    new TicTacToe().addPlayers([new Human('X', 'David'), new AI('O', 'WOPR')]).play();
+    break;
+  case 2:
+    new TicTacToe().addPlayers([new Human('X', 'David'), new Human('Jennifer')]).play();
+    break;
+  default:
 
-//AI vs Human
-//new TicTacToe([new Human(tokens[0]), new Human(tokens[1])], {rows: 3, cols: 3}).play();
+}
