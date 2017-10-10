@@ -244,7 +244,7 @@ class AI extends Player {
 
     //play the center.
     //TODO: get multiple centers in case of EVENxEVEN board
-    if (ttt.isFree(Math.floor(ttt.rows / 2), Math.floor(ttt.cols / 2))) {
+    if(ttt.isFree(Math.floor(ttt.rows / 2), Math.floor(ttt.cols / 2))) {
       return ttt.addToken(this.token, Math.floor(ttt.rows / 2), Math.floor(ttt.cols / 2));
     }
 
@@ -254,7 +254,7 @@ class AI extends Player {
     }));
 
 
-    if (corners.length > 0) {
+    if(corners.length > 0) {
       let[row, col] = corners[Math.floor(Math.random() * corners.length)];
       return ttt.addToken(this.token, row, col);
     }
