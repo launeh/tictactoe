@@ -1,4 +1,5 @@
-let Player = require('./player.js');
+let readline  = require('readline-sync');
+let Player    = require('./player.js');
 
 class Human extends Player {
   constructor(token, name = 'Human') {
@@ -7,10 +8,12 @@ class Human extends Player {
 
   move() {
     let move = readline.question(this.prompt);
+
     /*
      * Allow spaces: (1a, 1 a, 1  a) are all valid
      */
-    var [a, b] = move.toLowerCase().split('').filter(token => token.trim() !== '');
+    let [a, b] = move.toLowerCase().split('').filter(token => token.trim() !== '');
+
     /*
      * Allow 1a or a1
      */
