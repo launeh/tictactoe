@@ -9,6 +9,8 @@ class TicTacToe {
     this.movesRemaining  = this.rows * this.cols;
     this.board = [];
     this.EMPTY = '-';
+    this.history = [];
+
     for (let row = 0; row < this.rows; row++) {
       this.board[row] = [];
       for (let col = 0; col < this.cols; col++) {
@@ -43,13 +45,23 @@ class TicTacToe {
     return false;
   }
 
+  player() {
+    return this.players[(this.movesRemaining - 1) % this.players.length];
+  }
+
   nextPlayer() {
-    return this.players[(this.movesRemaining + 1) % this.players.length];
+    return this.players[this.movesRemaining % this.players.length];
   }
 
   show() {
     clear();
-    process.stdout.write("\nTic tac toe v1.0.0\n\nTo play use [row][col]. E.g. 1a \n\n ");
+    process.stdout.write("TicTacToe\n\n");
+
+    if (this.movesRemaining >= (this.rows * this.cols)) {
+      process.stdout.write("Would you like to play a game? ");
+    }
+
+    process.stdout.write("Use [row][col]. E.g. 1a \n\n ");
 
     let cols = [];
     var char = 'a';
@@ -82,6 +94,8 @@ class TicTacToe {
       } else {
         this.movesRemaining--;
       }
+
+      this.history.push({token : token, row : row, col : col});
       return true;
     }
     return false;
@@ -151,7 +165,7 @@ class TicTacToe {
   play() {
     this.show();
     while (!this.isOver()) {
-      this.nextPlayer().move();
+      this.player().move();
       this.show();
     }
 
@@ -204,45 +218,52 @@ class AI extends Player {
 
   move() {
     let ttt = this.ttt;
+    let legalMoves = ttt.getLegalMoves();
 
     let isWinning = (token, row, col) => {
       let winning = false;
       ttt.board[row][col] = token;
-      if (ttt.hasWon(token, row, col)) {
+      if (ttt.hasWon(token)) {
         winning = true;
       }
 
       ttt.board[row][col] = ttt.EMPTY;
-      return false;
+      return winning;
     };
 
     //play winning move
-    for (let row = 0; row < ttt.rows; row++) {
-      for (let col = 0; col < ttt.cols; col++) {
-        if (ttt.isFree(row, col) && isWinning(this.token, row, col)) {
-          return ttt.addToken(row, col);
-        }
+    for(let i = 0; i < legalMoves.length; i++) {
+      if (isWinning(this.token, legalMoves[i][0], legalMoves[i][1])) {
+        return ttt.addToken(this.token, legalMoves[i][0], legalMoves[i][1]);
       }
     }
 
     //play blocking move
-    for (let row = 0; row < ttt.rows; row++) {
-      for (let col = 0; col < ttt.cols; col++) {
-        if (ttt.isFree(row, col) && isWinning(ttt.nextPlayer().token, row, col)) {
-          return ttt.addToken(row, col);
-        }
+    for(let i = 0; i < legalMoves.length; i++) {
+      if (isWinning(ttt.nextPlayer().token, legalMoves[i][0], legalMoves[i][1])) {
+        return ttt.addToken(this.token, legalMoves[i][0], legalMoves[i][1]);
       }
     }
 
-    //prefer the center
+    //play the center
     if (ttt.isFree(Math.floor(ttt.rows / 2), Math.floor(ttt.cols / 2))) {
       return ttt.addToken(this.token, Math.floor(ttt.rows / 2), Math.floor(ttt.cols / 2));
     }
 
-    //play a random legal move
-    let legalMoves = ttt.getLegalMoves();
-    let[row, col] = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+    //play a random corner
+    let corners = legalMoves.filter(function(move) {
+      return move.every((m, idx) => {
+        return m === [0,0][idx] || m === [2,2][idx] || m === [0, ttt.cols - 1][idx] ||m === [0, ttt.cols - 1][idx];
+      });
+    });
 
+    if (corners.length > 0) {
+      let[row, col] = corners[Math.floor(Math.random() * corners.length)];
+      return ttt.addToken(this.token, row, col);
+    }
+
+    //play a random legal move
+    let[row, col] = legalMoves[Math.floor(Math.random() * legalMoves.length)];
     return ttt.addToken(this.token, row, col);
   }
 }
